@@ -2,25 +2,11 @@
 module Main where
 
 import Control.Lens
-import Data.Text (Text)
-import Data.List.NonEmpty
 import Monomer hiding (label)
 import UiKit
+import Types
 
 import qualified Monomer.Lens as L
-
-data MergeRequest = MergeRequest {
-  _iid :: Int,
-  _title :: Text
-} deriving (Eq, Show)
-
-data AppModel = AppModel {
-  _mrs :: Maybe (NonEmpty MergeRequest)
-} deriving (Eq, Show)
-
-data AppEvent
-  = AppInit
-  deriving (Eq, Show)
 
 makeLenses 'AppModel
 
@@ -55,7 +41,9 @@ main_mrmr = do
       appInitEvent AppInit
       ]
     model = AppModel {
-      _mrs = Nothing
+      _mrs = Nothing,
+      _contentState = Ready,
+      _selectedMr = Nothing
     }
 
 main :: IO ()
