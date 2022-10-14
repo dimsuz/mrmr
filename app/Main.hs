@@ -15,11 +15,10 @@ buildUI
   -> AppModel
   -> WidgetNode AppModel AppEvent
 buildUI wenv model = widgetTree where
-  widgetTree = vstack [
-      label "Hello",
-      label "World"
-    ] `styleBasic` [padding 10]
-
+  bindings = [("Esc", AppQuit)]
+  widgetTree = keystroke bindings $ vstack [
+    loadingOverlay "Loading MR list..."
+    ] `styleBasic` [padding 10] `nodeFocusable` True
 handleEvent
   :: WidgetEnv AppModel AppEvent
   -> WidgetNode AppModel AppEvent
@@ -29,16 +28,18 @@ handleEvent
 handleEvent wenv node model evt = case evt of
   AppInit -> []
 
-main_mrmr :: IO ()
-main_mrmr = do
+mainMrmr :: IO ()
+mainMrmr = do
   startApp model handleEvent buildUI config
   where
     config = [
       appWindowTitle "Mrmr",
       appWindowIcon "./assets/images/icon.png",
+      appWindowState (MainWindowNormal (1200, 800)),
       appTheme lightTheme,
       appFontDef "Regular" "./assets/fonts/Roboto-Regular.ttf",
-      appInitEvent AppInit
+      appInitEvent AppInit,
+      appExitEvent AppQuit
       ]
     model = AppModel {
       _mrs = Nothing,
@@ -47,6 +48,6 @@ main_mrmr = do
     }
 
 main :: IO ()
-main = main_mrmr
+main = mainMrmr
 -- main = Tutorial02_Styling.main02
 -- main = Todo.todoMain

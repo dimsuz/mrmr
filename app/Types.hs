@@ -21,5 +21,5 @@ data AppModel = AppModel {
 } deriving (Eq, Show)
 
 data AppEvent
-  = AppInit
+  = AppInit | AppQuit
   deriving (Eq, Show)
