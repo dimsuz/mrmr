@@ -5,10 +5,20 @@ import Control.Lens
 import Monomer hiding (label)
 import UiKit
 import Types
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.Maybe
 
 import qualified Monomer.Lens as L
 
 makeLenses 'AppModel
+
+mockMrs = NonEmpty.fromList [
+  MergeRequest {_iid = Iid 33, _title="Merge Request #1"},
+  MergeRequest {_iid = Iid 34, _title="Merge Request #2"},
+  MergeRequest {_iid = Iid 35, _title="Merge Request #3"},
+  MergeRequest {_iid = Iid 36, _title="Merge Request #4"},
+  MergeRequest {_iid = Iid 37, _title="Merge Request #5"}
+  ]
 
 buildUI
   :: WidgetEnv AppModel AppEvent
@@ -16,9 +26,8 @@ buildUI
   -> WidgetNode AppModel AppEvent
 buildUI wenv model = widgetTree where
   bindings = [("Esc", AppQuit)]
-  widgetTree = keystroke bindings $ vstack [
-    loadingOverlay "Loading MR list..."
-    ] `styleBasic` [padding 10] `nodeFocusable` True
+  rootWidget = if isJust (_mrs model) then loadingOverlay "MR List" else loadingOverlay "Loading MR list..."
+  widgetTree = keystroke bindings $ rootWidget `styleBasic` [padding 10] `nodeFocusable` True
 handleEvent
   :: WidgetEnv AppModel AppEvent
   -> WidgetNode AppModel AppEvent
