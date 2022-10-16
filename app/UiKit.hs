@@ -9,12 +9,24 @@ label text = M.label text `styleBasic` [textSize 20]
 titleText :: (M.WidgetModel s, M.WidgetEvent e) => Text -> M.WidgetNode s e
 titleText text = M.label text `styleBasic` [textSize 24]
 
-loadingOverlay text = vstack [
-  filler,
-  hstack [
-        filler,
-        M.label text `styleBasic` [textSize 20, padding 16, border 2 oliveDrab],
-        filler
-  ],
-  filler
-  ]
+loadingOverlay text =
+  vstack
+    [ filler
+    , hstack
+        [ filler
+        , M.label text `styleBasic` [textSize 20, padding 16, border 2 oliveDrab]
+        , filler
+        ]
+    , filler
+    ]
+
+errorOverlay text =
+  vstack
+    [ filler
+    , hstack
+        [ filler
+        , M.label text `styleBasic` [textSize 20, padding 16, border 2 coral]
+        , filler
+        ]
+    , filler
+    ]
