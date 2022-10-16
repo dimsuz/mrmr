@@ -3,15 +3,30 @@
 module Types where
 
 import Control.Lens
-import Data.List.NonEmpty
+import Data.Aeson
+import Data.Foldable (toList)
 import Data.Text (Text)
 import Monomer
+
+data MrListResponse = MrListResponse [MergeRequest]
 
 data MergeRequest = MergeRequest
   { _iid :: Iid
   , _title :: Text
   }
   deriving (Eq, Show)
+
+instance FromJSON MergeRequest where
+  parseJSON = withObject "MergeRequest" $ \mr ->
+    MergeRequest
+      <$> (Iid <$> mr .: "iid")
+      <*> mr
+        .: "title"
+
+instance FromJSON MrListResponse where
+  parseJSON = withArray "MrList" $ \arr -> do
+    mrs <- mapM parseJSON arr
+    pure $ MrListResponse (toList mrs)
 
 newtype Iid = Iid Int
   deriving (Eq, Show)
@@ -33,6 +48,7 @@ data AppEvent
   | MrListResult [MergeRequest]
   | MrListError Text
   | MrShowDetails Iid
+  | ShowMrList
   deriving (Eq, Show)
 
 type MrMrWenv = WidgetEnv AppModel AppEvent

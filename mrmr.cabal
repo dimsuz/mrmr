@@ -34,6 +34,7 @@ executable mrmr
                     , text-show
                     , data-default
                     , wreq
+                    , aeson
     hs-source-dirs:   app
     default-language: Haskell2010
     default-extensions:

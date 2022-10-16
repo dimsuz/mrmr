@@ -2,10 +2,15 @@
 
 module Network where
 
-import Control.Concurrent
+import Control.Lens
+import Data.Aeson
 import Network.Wreq as W
 import Network.Wreq.Session as Sess
 import Types
+
+projectId = "0"
+mrIid = "0"
+privateToken = "unknown" -- no-commit
 
 mockMrs =
   [ MergeRequest{_iid = Iid 33, _title = "Merge Request #1"}
@@ -18,6 +23,7 @@ mockMrs =
 fetchMrList
   :: Sess.Session
   -> IO AppEvent
-fetchMrList _ = do
-  threadDelay (1_000_000 `div` 2)
-  pure $ MrListResult mockMrs
+fetchMrList sess = do
+  let url = "https://gitlab.com/api/v4/merge_requests?private_token=" <> privateToken
+  resp <- Sess.get sess url >>= W.asJSON
+  pure $ MrListResult (resp ^. responseBody)

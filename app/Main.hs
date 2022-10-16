@@ -37,7 +37,7 @@ handleEvent sess wenv node model evt = case evt of
   MrListResult mrList ->
     [ Model $
         model
-          & mrs .~ (Just mrList)
+          & mrs ?~ mrList
           & contentState .~ Ready
     ]
   MrListError err ->
@@ -50,6 +50,11 @@ handleEvent sess wenv node model evt = case evt of
         model
           & selectedMr .~ (Just iid)
     ]
+  ShowMrList ->
+    [ Model $
+        model
+          & selectedMr .~ Nothing
+    ]
 
 rootWidget
   :: MrMrWenv
@@ -58,11 +63,15 @@ rootWidget
 rootWidget wenv model =
   case model ^. contentState of
     Loading text -> loadingOverlay text
-    Ready -> mrListWidget wenv mockMrs
+    Ready ->
+      if has _Just $ model ^. selectedMr
+        then box $ button "Go back" ShowMrList
+        else mrListWidget wenv (model ^. mrs . _Just)
     Error text -> errorOverlay text
 
 mrListWidget wenv mrList =
-  vscroll
+  vscroll_
+    [wheelRate 30.0]
     ( vstack (mrListRow wenv <$> mrList)
     )
 
