@@ -29,11 +29,7 @@ buildUI
 buildUI wenv model = widgetTree
  where
   bindings = [("Esc", AppQuit)]
-  rootWidget =
-    if isJust (_mrs model)
-      then loadingOverlay "MR List"
-      else loadingOverlay "Loading MR list..."
-  widgetTree = keystroke bindings $ rootWidget `styleBasic` [padding 10] `nodeFocusable` True
+  widgetTree = keystroke bindings $ (rootWidget wenv model) `styleBasic` [padding 10] `nodeFocusable` True
 handleEvent
   :: WidgetEnv AppModel AppEvent
   -> WidgetNode AppModel AppEvent
@@ -42,6 +38,16 @@ handleEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent wenv node model evt = case evt of
   AppInit -> []
+
+rootWidget
+  :: WidgetEnv AppModel AppEvent
+  -> AppModel
+  -> WidgetNode AppModel AppEvent
+rootWidget wenv model =
+  case model ^. contentState of
+    Loading text -> loadingOverlay text
+    Ready -> loadingOverlay "MR List"
+    Error text -> errorOverlay text
 
 mainMrmr :: IO ()
 mainMrmr = do
@@ -59,7 +65,7 @@ mainMrmr = do
   model =
     AppModel
       { _mrs = Nothing
-      , _contentState = Ready
+      , _contentState = Loading "Loading MR list..."
       , _selectedMr = Nothing
       }
 
