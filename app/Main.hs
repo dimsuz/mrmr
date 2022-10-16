@@ -1,26 +1,15 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Main where
 
 import Control.Lens
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe
-import Monomer hiding (label)
+import Monomer
+import Network
+import Network.Wreq.Session as Sess
 import Types
 import UiKit
 
 import qualified Monomer.Lens as L
-
-makeLenses 'AppModel
-
-mockMrs =
-  NonEmpty.fromList
-    [ MergeRequest{_iid = Iid 33, _title = "Merge Request #1"}
-    , MergeRequest{_iid = Iid 34, _title = "Merge Request #2"}
-    , MergeRequest{_iid = Iid 35, _title = "Merge Request #3"}
-    , MergeRequest{_iid = Iid 36, _title = "Merge Request #4"}
-    , MergeRequest{_iid = Iid 37, _title = "Merge Request #5"}
-    ]
 
 buildUI
   :: WidgetEnv AppModel AppEvent
@@ -30,28 +19,57 @@ buildUI wenv model = widgetTree
  where
   bindings = [("Esc", AppQuit)]
   widgetTree = keystroke bindings $ (rootWidget wenv model) `styleBasic` [padding 10] `nodeFocusable` True
+
 handleEvent
-  :: WidgetEnv AppModel AppEvent
-  -> WidgetNode AppModel AppEvent
+  :: Sess.Session
+  -> MrMrWenv
+  -> MrMrNode
   -> AppModel
   -> AppEvent
   -> [AppEventResponse AppModel AppEvent]
-handleEvent wenv node model evt = case evt of
-  AppInit -> []
+handleEvent sess wenv node model evt = case evt of
+  AppInit -> [Event FetchMrList]
+  FetchMrList ->
+    [ Model $
+        model & contentState .~ Loading "Loading MR List..."
+    , Task $ fetchMrList sess
+    ]
+  MrListResult mrList ->
+    [ Model $
+        model
+          & mrs .~ (Just mrList)
+          & contentState .~ Ready
+    ]
+  MrListError err ->
+    [ Model $
+        model
+          & contentState .~ (Error err)
+    ]
+  MrShowDetails iid ->
+    [ Model $
+        model
+          & selectedMr .~ (Just iid)
+    ]
 
 rootWidget
-  :: WidgetEnv AppModel AppEvent
+  :: MrMrWenv
   -> AppModel
-  -> WidgetNode AppModel AppEvent
+  -> MrMrNode
 rootWidget wenv model =
   case model ^. contentState of
     Loading text -> loadingOverlay text
-    Ready -> loadingOverlay "MR List"
+    Ready -> mrListWidget wenv mockMrs
     Error text -> errorOverlay text
+
+mrListWidget wenv mrList =
+  vscroll
+    ( vstack (mrListRow wenv <$> mrList)
+    )
 
 mainMrmr :: IO ()
 mainMrmr = do
-  startApp model handleEvent buildUI config
+  sess <- Sess.newSession
+  startApp model (handleEvent sess) buildUI config
  where
   config =
     [ appWindowTitle "Mrmr"
