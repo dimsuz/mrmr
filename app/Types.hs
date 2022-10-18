@@ -6,7 +6,8 @@ import Control.Lens
 import Data.Aeson
 import Data.Foldable (toList)
 import Data.Text (Text)
-import Monomer
+import Monomer hiding (Path)
+import Path
 
 data MrListResponse = MrListResponse [MergeRequest]
 
@@ -34,6 +35,12 @@ newtype Iid = Iid Int
 data ContentLoadState = Loading Text | Ready | Error Text
   deriving (Eq, Show)
 
+data DiffFile = DiffFile
+  { _oldFile :: Path Abs File
+  , _newFile :: Path Abs File
+  , _diff :: Text
+  }
+
 data AppModel = AppModel
   { _mrs :: Maybe [MergeRequest]
   , _contentState :: ContentLoadState
@@ -55,4 +62,5 @@ type MrMrWenv = WidgetEnv AppModel AppEvent
 type MrMrNode = WidgetNode AppModel AppEvent
 
 makeLenses 'MergeRequest
+makeLenses 'DiffFile
 makeLenses 'AppModel

@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes #-}
+
 module Main where
 
 import Control.Lens
@@ -6,6 +9,7 @@ import Data.Maybe
 import Monomer
 import Network
 import Network.Wreq.Session as Sess
+import Path
 import Types
 import UiKit
 
@@ -28,7 +32,8 @@ handleEvent
   -> AppEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent sess wenv node model evt = case evt of
-  AppInit -> [Event FetchMrList]
+  AppInit -> [Event (MrShowDetails (Iid 33))] -- [Event FetchMrList]
+  AppQuit -> [exitApplication]
   FetchMrList ->
     [ Model $
         model & contentState .~ Loading "Loading MR List..."
@@ -49,12 +54,21 @@ handleEvent sess wenv node model evt = case evt of
     [ Model $
         model
           & selectedMr .~ (Just iid)
+          & contentState .~ Ready -- TODO remove, used only without FetchMrList stage
     ]
   ShowMrList ->
     [ Model $
         model
           & selectedMr .~ Nothing
     ]
+
+mockDiffFiles =
+  [ DiffFile
+      { _oldFile = [absfile|/home/dima/foo.txt|]
+      , _newFile = [absfile|/home/dima/foo.txt|]
+      , _diff = ""
+      }
+  ]
 
 rootWidget
   :: MrMrWenv
@@ -65,7 +79,7 @@ rootWidget wenv model =
     Loading text -> loadingOverlay text
     Ready ->
       if has _Just $ model ^. selectedMr
-        then box $ button "Go back" ShowMrList
+        then mrChanges wenv mockDiffFiles
         else mrListWidget wenv (model ^. mrs . _Just)
     Error text -> errorOverlay text
 
@@ -87,7 +101,6 @@ mainMrmr = do
     , appTheme lightTheme
     , appFontDef "Regular" "./assets/fonts/Roboto-Regular.ttf"
     , appInitEvent AppInit
-    , appExitEvent AppQuit
     ]
   model =
     AppModel
