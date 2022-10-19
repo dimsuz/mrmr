@@ -2,7 +2,7 @@ module UiKit where
 
 import Control.Lens
 import Data.Default
-import Data.Text (Text)
+import Data.Text (Text, isPrefixOf)
 import Monomer as M
 import qualified Monomer.Lens as L
 import TextShow
@@ -12,6 +12,9 @@ borderColor = rgb 219 219 219
 diffHeaderBgColor = rgb 250 250 250
 hunkLineBgColor = rgb 250 250 250
 hunkLineBgColorHover = rgb 225 216 242
+hunkLineHeaderBgColor = rgb 219 219 219
+diffRemoveLineColor = rgb 251 233 235
+diffAddLineColor = rgb 236 253 240
 
 titleText :: (M.WidgetModel s, M.WidgetEvent e) => Text -> M.WidgetNode s e
 titleText text = M.label text `styleBasic` [textSize 24]
@@ -57,7 +60,12 @@ mrListRow wenv mr = row
 mrChanges :: MrMrWenv -> [DiffFile] -> MrMrNode
 mrChanges wenv files = vstack_ [childSpacing_ 20] items
  where
-  items = (button "Go back" ShowMrList) : map (diffFile wenv) files
+  items = button "Go back" ShowMrList : map (diffFile wenv) files
+
+diffLineColor line
+  | "+" `isPrefixOf` line = diffAddLineColor
+  | "-" `isPrefixOf` line = diffRemoveLineColor
+  | otherwise = white
 
 diffFile :: MrMrWenv -> DiffFile -> MrMrNode
 diffFile wenv file = layout
@@ -72,11 +80,21 @@ diffFile wenv file = layout
       `styleHover` [bgColor hunkLineBgColorHover, cursorIcon CursorHand]
   lineNumbersRow index linesFrom linesTo =
     hgrid [lineLabel (showt $ index * 88), lineLabel (showt $ index * 4)]
+  -- TODO use computeTextSize + padding to calculate height instead of hardcoding minHeight
+  hunkLineHeader = spacer `styleBasic` [minHeight 28, bgColor hunkLineHeaderBgColor]
   lineNumbers hunk =
-    vstack
-      (map (\i -> lineNumbersRow i (hunk ^. dhFrom) (hunk ^. dhTo)) [1 .. length (hunk ^. dhLines)])
+    vstack $
+      hunkLineHeader
+        : map
+          (\i -> lineNumbersRow i (hunk ^. dhFrom) (hunk ^. dhTo))
+          [1 .. length (hunk ^. dhLines)]
+  diffLine line =
+    label line
+      `styleBasic` [paddingV 6, bgColor (diffLineColor line)]
+      `styleHover` [bgColor hunkLineBgColorHover]
+  diffLines hunk = vstack_ [sizeReqUpdater (fixedToExpandW 1.0)] (map diffLine (hunk ^. dhLines))
   diffHunk hunk =
-    hstack [lineNumbers hunk]
+    hstack [lineNumbers hunk, diffLines hunk]
   diff = vstack (map diffHunk (file ^. hunks)) `styleBasic` [bgColor white]
   layout =
     vstack_

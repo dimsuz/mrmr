@@ -22,7 +22,7 @@ buildUI
 buildUI wenv model = widgetTree
  where
   bindings = [("Esc", AppQuit)]
-  widgetTree = keystroke bindings $ (rootWidget wenv model) `styleBasic` [padding 10] `nodeFocusable` True
+  widgetTree = keystroke bindings $ rootWidget wenv model `styleBasic` [padding 10] `nodeFocusable` True
 
 handleEvent
   :: Sess.Session
@@ -48,12 +48,12 @@ handleEvent sess wenv node model evt = case evt of
   MrListError err ->
     [ Model $
         model
-          & contentState .~ (Error err)
+          & contentState .~ Error err
     ]
   MrShowDetails iid ->
     [ Model $
         model
-          & selectedMr .~ (Just iid)
+          & selectedMr ?~ iid
           & contentState .~ Ready -- TODO remove, used only without FetchMrList stage
     ]
   ShowMrList ->
@@ -70,7 +70,19 @@ mockDiffFiles =
           [ DiffHunk
               { _dhFrom = HunkLines{_start = 23, _count = 7}
               , _dhTo = HunkLines{_start = 23, _count = 6}
-              , _dhLines = ["+Hello", "+World", "+Hello", "+World", "+Hello", "+World", "+Hello", "+World"]
+              , _dhLines =
+                  [ "         .collect { message ->"
+                  , "-          if (message !is PushMessage.Unknown) {"
+                  , "-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager"
+                  , "-            message.toAndroidNotification(applicationContext)?.let { notificationManager.notify(message.id, it) }"
+                  , "-          } else {"
+                  , "-            Timber.d(\"Received unknown type of message $message\")"
+                  , "-          }"
+                  , "+          val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager"
+                  , "+          message.toAndroidNotification(applicationContext)?.let { notificationManager.notify(message.id, it) }"
+                  , "         }"
+                  , "     }"
+                  ]
               }
           ]
       }

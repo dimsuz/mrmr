@@ -9,7 +9,7 @@ import Data.Text (Text)
 import Monomer hiding (Path)
 import Path
 
-data MrListResponse = MrListResponse [MergeRequest]
+newtype MrListResponse = MrListResponse [MergeRequest]
 
 data MergeRequest = MergeRequest
   { _iid :: Iid
