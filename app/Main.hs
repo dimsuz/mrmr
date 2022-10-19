@@ -66,7 +66,13 @@ mockDiffFiles =
   [ DiffFile
       { _oldFile = [absfile|/home/dima/foo.txt|]
       , _newFile = [absfile|/home/dima/foo.txt|]
-      , _diff = ""
+      , _hunks =
+          [ DiffHunk
+              { _dhFrom = HunkLines{_start = 23, _count = 7}
+              , _dhTo = HunkLines{_start = 23, _count = 6}
+              , _dhLines = ["+Hello", "+World", "+Hello", "+World", "+Hello", "+World", "+Hello", "+World"]
+              }
+          ]
       }
   ]
 

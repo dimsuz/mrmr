@@ -5,10 +5,13 @@ import Data.Default
 import Data.Text (Text)
 import Monomer as M
 import qualified Monomer.Lens as L
+import TextShow
 import Types
 
 borderColor = rgb 219 219 219
 diffHeaderBgColor = rgb 250 250 250
+hunkLineBgColor = rgb 250 250 250
+hunkLineBgColorHover = rgb 225 216 242
 
 titleText :: (M.WidgetModel s, M.WidgetEvent e) => Text -> M.WidgetNode s e
 titleText text = M.label text `styleBasic` [textSize 24]
@@ -63,7 +66,18 @@ diffFile wenv file = layout
     hstack
       [label "Hello"]
       `styleBasic` [minHeight 45, bgColor diffHeaderBgColor, borderB 1 borderColor, paddingH 16, paddingV 8]
-  diff = box (label "Diff") `styleBasic` [height 200, bgColor white]
+  lineLabel text =
+    box_ [alignRight] (label text)
+      `styleBasic` [paddingV 6, paddingH 8, borderR 1 borderColor, bgColor hunkLineBgColor]
+      `styleHover` [bgColor hunkLineBgColorHover, cursorIcon CursorHand]
+  lineNumbersRow index linesFrom linesTo =
+    hgrid [lineLabel (showt $ index * 88), lineLabel (showt $ index * 4)]
+  lineNumbers hunk =
+    vstack
+      (map (\i -> lineNumbersRow i (hunk ^. dhFrom) (hunk ^. dhTo)) [1 .. length (hunk ^. dhLines)])
+  diffHunk hunk =
+    hstack [lineNumbers hunk]
+  diff = vstack (map diffHunk (file ^. hunks)) `styleBasic` [bgColor white]
   layout =
     vstack_
       [sizeReqUpdater clearExtra]

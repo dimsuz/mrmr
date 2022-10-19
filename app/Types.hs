@@ -35,10 +35,21 @@ newtype Iid = Iid Int
 data ContentLoadState = Loading Text | Ready | Error Text
   deriving (Eq, Show)
 
+data HunkLines = HunkLines
+  { _start :: Int
+  , _count :: Int
+  }
+
+data DiffHunk = DiffHunk
+  { _dhFrom :: HunkLines
+  , _dhTo :: HunkLines
+  , _dhLines :: [Text]
+  }
+
 data DiffFile = DiffFile
   { _oldFile :: Path Abs File
   , _newFile :: Path Abs File
-  , _diff :: Text
+  , _hunks :: [DiffHunk]
   }
 
 data AppModel = AppModel
@@ -64,3 +75,5 @@ type MrMrNode = WidgetNode AppModel AppEvent
 makeLenses 'MergeRequest
 makeLenses 'DiffFile
 makeLenses 'AppModel
+makeLenses 'DiffHunk
+makeLenses 'HunkLines
