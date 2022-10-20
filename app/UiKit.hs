@@ -12,6 +12,7 @@ borderColor = rgb 219 219 219
 diffHeaderBgColor = rgb 250 250 250
 hunkLineBgColor = rgb 250 250 250
 hunkLineBgColorHover = rgb 225 216 242
+hunkHeaderBgColor = rgb 240 240 240
 hunkLineHeaderBgColor = rgb 219 219 219
 diffRemoveLineColor = rgb 251 233 235
 diffAddLineColor = rgb 236 253 240
@@ -82,6 +83,7 @@ diffFile wenv file = layout
     hgrid [lineLabel (showt $ index * 88), lineLabel (showt $ index * 4)]
   -- TODO use computeTextSize + padding to calculate height instead of hardcoding minHeight
   hunkLineHeader = spacer `styleBasic` [minHeight 28, bgColor hunkLineHeaderBgColor]
+  hunkHeader = spacer `styleBasic` [minHeight 28, bgColor hunkHeaderBgColor]
   lineNumbers hunk =
     vstack $
       hunkLineHeader
@@ -92,7 +94,10 @@ diffFile wenv file = layout
     label line
       `styleBasic` [paddingV 6, bgColor (diffLineColor line)]
       `styleHover` [bgColor hunkLineBgColorHover]
-  diffLines hunk = vstack_ [sizeReqUpdater (fixedToExpandW 1.0)] (map diffLine (hunk ^. dhLines))
+  diffLines hunk =
+    vstack_
+      [sizeReqUpdater (fixedToExpandW 1.0)]
+      (hunkHeader : (map diffLine (hunk ^. dhLines)))
   diffHunk hunk =
     hstack [lineNumbers hunk, diffLines hunk]
   diff = vstack (map diffHunk (file ^. hunks)) `styleBasic` [bgColor white]
