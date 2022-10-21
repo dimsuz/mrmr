@@ -8,9 +8,9 @@ import Network.Wreq as W
 import Network.Wreq.Session as Sess
 import Types
 
-projectId = "0"
-mrIid = "0"
-privateToken = "unknown" -- no-commit
+projectId = "0" -- 39695842" -- no-commit
+mrIid = "0" -- no-commit
+privateToken = "" -- no-commit
 
 mockMrs =
   [ MergeRequest{_iid = Iid 33, _title = "Merge Request #1"}

@@ -20,7 +20,8 @@ maintainer:         mail@dimsuz.ru
 extra-source-files: CHANGELOG.md
 
 library mrmr-lib
-    other-modules:  Parse
+    exposed-modules:
+        Parse, UiKit, Types, Network
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -43,7 +44,7 @@ executable mrmr
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules:  UiKit, Types, Network
+    other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
