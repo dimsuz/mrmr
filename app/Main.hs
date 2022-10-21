@@ -68,8 +68,7 @@ mockDiffFiles =
       , _newFile = [absfile|/home/dima/foo.txt|]
       , _hunks =
           [ DiffHunk
-              { _dhFrom = HunkLines{_start = 23, _count = 7}
-              , _dhTo = HunkLines{_start = 23, _count = 6}
+              { _dhHeader = HunkHeader{_oldStart = 23, _oldCount = 7, _newStart = 23, _newCount = 6}
               , _dhLines =
                   [ "         .collect { message ->"
                   , "-          if (message !is PushMessage.Unknown) {"

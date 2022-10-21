@@ -79,7 +79,7 @@ diffFile wenv file = layout
     box_ [alignRight] (label text)
       `styleBasic` [paddingV 6, paddingH 8, borderR 1 borderColor, bgColor hunkLineBgColor]
       `styleHover` [bgColor hunkLineBgColorHover, cursorIcon CursorHand]
-  lineNumbersRow index linesFrom linesTo =
+  lineNumbersRow index header =
     hgrid [lineLabel (showt $ index * 88), lineLabel (showt $ index * 4)]
   -- TODO use computeTextSize + padding to calculate height instead of hardcoding minHeight
   hunkLineHeader = spacer `styleBasic` [minHeight 28, bgColor hunkLineHeaderBgColor]
@@ -88,7 +88,7 @@ diffFile wenv file = layout
     vstack $
       hunkLineHeader
         : map
-          (\i -> lineNumbersRow i (hunk ^. dhFrom) (hunk ^. dhTo))
+          (\i -> lineNumbersRow i (hunk ^. dhHeader))
           [1 .. length (hunk ^. dhLines)]
   diffLine line =
     label line

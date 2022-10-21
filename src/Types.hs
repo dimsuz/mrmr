@@ -35,14 +35,16 @@ newtype Iid = Iid Int
 data ContentLoadState = Loading Text | Ready | Error Text
   deriving (Eq, Show)
 
-data HunkLines = HunkLines
-  { _start :: Int
-  , _count :: Int
+data HunkHeader = HunkHeader
+  { _oldStart :: Int
+  , _oldCount :: Int
+  , _newStart :: Int
+  , _newCount :: Int
+  , _text :: Text
   }
 
 data DiffHunk = DiffHunk
-  { _dhFrom :: HunkLines
-  , _dhTo :: HunkLines
+  { _dhHeader :: HunkHeader
   , _dhLines :: [Text]
   }
 
@@ -76,4 +78,4 @@ makeLenses 'MergeRequest
 makeLenses 'DiffFile
 makeLenses 'AppModel
 makeLenses 'DiffHunk
-makeLenses 'HunkLines
+makeLenses 'HunkHeader
