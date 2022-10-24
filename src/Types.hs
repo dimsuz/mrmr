@@ -42,6 +42,7 @@ data HunkHeader = HunkHeader
   , _newCount :: Int
   , _text :: Text
   }
+  deriving (Show)
 
 data DiffHunk = DiffHunk
   { _dhHeader :: HunkHeader

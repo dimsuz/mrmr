@@ -34,4 +34,4 @@ spec :: Spec
 spec = do
   describe "parseDiffHeader" $ do
     prop "parses correctly" $ \(Header text) ->
-      encodeHunkHeader (decodeHunkHeader text) `shouldBe` text
+      encodeHunkHeader <$> (decodeHunkHeader text) `shouldBe` Right text
