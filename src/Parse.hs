@@ -1,5 +1,6 @@
 module Parse where
 
+import Data.Maybe
 import Data.Text
 import Data.Void
 import Text.Megaparsec
@@ -16,23 +17,21 @@ decodeHunkHeader text = case parse hunkHeader "" text of
   Right header -> Right header
  where
   hunkHeader :: Parser HunkHeader
-  hunkHeader =
-    HunkHeader
-      <$> (string "@@ -" *> L.decimal <* char ',')
-      <*> L.decimal
-      <*> (string " +" *> L.decimal <* char ',')
-      <*> (L.decimal <* " @@ ")
-      <*> (pack <$> many alphaNumChar)
+  hunkHeader = do
+    os <- string "@@ -" *> L.decimal
+    oc <- fromMaybe 1 <$> optional (char ',' *> L.decimal)
+    ns <- string " +" *> L.decimal
+    nc <- (fromMaybe 1 <$> optional (char ',' *> L.decimal)) <* " @@ "
+    HunkHeader os oc ns nc <$> takeRest
 
 encodeHunkHeader :: HunkHeader -> Text
 encodeHunkHeader (HunkHeader os oc ns nc t) =
   "@@ -"
-    <> showt os
-    <> ","
-    <> showt oc
+    <> old
     <> " +"
-    <> showt ns
-    <> ","
-    <> showt nc
+    <> new
     <> " @@ "
     <> t
+ where
+  old = if oc == 1 then showt os else showt os <> "," <> showt oc
+  new = if nc == 1 then showt ns else showt ns <> "," <> showt nc
