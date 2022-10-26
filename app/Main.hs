@@ -22,7 +22,7 @@ buildUI
 buildUI wenv model = widgetTree
  where
   bindings = [("Esc", AppQuit)]
-  widgetTree = keystroke bindings $ rootWidget wenv model `styleBasic` [padding 10] `nodeFocusable` True
+  widgetTree = keystroke bindings $ rootWidget wenv model `nodeFocusable` True
 
 handleEvent
   :: Sess.Session
@@ -67,8 +67,9 @@ mockDiffFiles =
       { _oldFile = [absfile|/home/dima/foo.txt|]
       , _newFile = [absfile|/home/dima/foo.txt|]
       , _hunks =
-          [ DiffHunk
-              { _dhHeader = HunkHeader{_oldStart = 23, _oldCount = 7, _newStart = 23, _newCount = 6}
+          replicate 5 $
+            DiffHunk
+              { _dhHeader = HunkHeader{_oldStart = 23, _oldCount = 7, _newStart = 23, _newCount = 6, _text = "hello.world()"}
               , _dhLines =
                   [ "         .collect { message ->"
                   , "-          if (message !is PushMessage.Unknown) {"
@@ -83,7 +84,6 @@ mockDiffFiles =
                   , "     }"
                   ]
               }
-          ]
       }
   ]
 
@@ -116,7 +116,7 @@ mainMrmr = do
     , appWindowIcon "./assets/images/icon.png"
     , appWindowState (MainWindowNormal (1200, 800))
     , appTheme lightTheme
-    , appFontDef "Regular" "./assets/fonts/Roboto-Regular.ttf"
+    , appFontDef "Regular" "./assets/fonts/JetBrainsMono-Regular.ttf"
     , appInitEvent AppInit
     ]
   model =
@@ -128,6 +128,3 @@ mainMrmr = do
 
 main :: IO ()
 main = mainMrmr
-
--- main = Tutorial02_Styling.main02
--- main = Todo.todoMain

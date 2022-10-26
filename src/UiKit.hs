@@ -59,9 +59,16 @@ mrListRow wenv mr = row
         `styleHover` [bgColor rowBgColor, cursorIcon CursorHand]
 
 mrChanges :: MrMrWenv -> [DiffFile] -> MrMrNode
-mrChanges wenv files = vstack_ [childSpacing_ 20] items
+mrChanges wenv files = content
  where
-  items = button "Go back" ShowMrList : map (diffFile wenv) files
+  content =
+    vstack_
+      [childSpacing_ 20]
+      [ button "Go back" ShowMrList
+      , vscroll_ [wheelRate 30.0] changes
+      ]
+  changes = vstack_ [childSpacing_ 20] fileList `styleBasic` [paddingH 10]
+  fileList = map (diffFile wenv) files
 
 diffLineColor line
   | "+" `isPrefixOf` line = diffAddLineColor
@@ -73,7 +80,7 @@ diffFile wenv file = layout
  where
   header =
     hstack
-      [label "Hello"]
+      [label "foo/bar.kt"]
       `styleBasic` [minHeight 45, bgColor diffHeaderBgColor, borderB 1 borderColor, paddingH 16, paddingV 8]
   lineLabel text =
     box_ [alignRight] (label text)
