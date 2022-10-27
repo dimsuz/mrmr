@@ -5,6 +5,7 @@ module Types where
 import Control.Lens
 import Data.Aeson
 import Data.Foldable (toList)
+import Data.Maybe
 import Data.Text (Text)
 import Monomer hiding (Path)
 import Path
@@ -29,6 +30,21 @@ instance FromJSON MrListResponse where
     mrs <- mapM parseJSON arr
     pure $ MrListResponse (toList mrs)
 
+newtype MrChangesResponse = MrChangesResponse [DiffFile]
+
+instance FromJSON DiffFile where
+  parseJSON = withObject "change" $ \change ->
+    do
+      oldPathStr <- change .: "old_path"
+      oldPath <- maybe (fail "failed to parse old_path") pure (parseRelFile oldPathStr)
+      newPathStr <- change .: "new_path"
+      newPath <- maybe (fail "failed to parse new_path") pure (parseRelFile newPathStr)
+      hunks <- parseHunks <$> change .: "diff"
+      pure $ DiffFile oldPath newPath hunks
+
+parseHunks :: Text -> [DiffHunk]
+parseHunks = undefined
+
 newtype Iid = Iid Int
   deriving (Eq, Show)
 
@@ -50,8 +66,8 @@ data DiffHunk = DiffHunk
   }
 
 data DiffFile = DiffFile
-  { _oldFile :: Path Abs File
-  , _newFile :: Path Abs File
+  { _oldFile :: Path Rel File
+  , _newFile :: Path Rel File
   , _hunks :: [DiffHunk]
   }
 

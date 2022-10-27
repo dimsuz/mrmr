@@ -4,8 +4,10 @@ module Network where
 
 import Control.Lens
 import Data.Aeson
+import Data.Text
 import Network.Wreq as W
 import Network.Wreq.Session as Sess
+import TextShow
 import Types
 
 projectId = "0" -- 39695842" -- no-commit
@@ -25,5 +27,20 @@ fetchMrList
   -> IO AppEvent
 fetchMrList sess = do
   let url = "https://gitlab.com/api/v4/merge_requests?private_token=" <> privateToken
-  resp <- Sess.get sess url >>= W.asJSON
+  resp <- Sess.get sess (unpack url) >>= W.asJSON
+  pure $ MrListResult (resp ^. responseBody)
+
+fetchMrChanges
+  :: Sess.Session
+  -> Iid
+  -> IO AppEvent
+fetchMrChanges sess (Iid iid) = do
+  let url =
+        "https://gitlab.com/api/v4/projects/"
+          <> projectId
+          <> "/merge_requests/"
+          <> showt iid
+          <> "/changes?private_token="
+          <> privateToken
+  resp <- Sess.get sess (unpack url) >>= W.asJSON
   pure $ MrListResult (resp ^. responseBody)

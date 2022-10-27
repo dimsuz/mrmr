@@ -64,8 +64,8 @@ handleEvent sess wenv node model evt = case evt of
 
 mockDiffFiles =
   [ DiffFile
-      { _oldFile = [absfile|/home/dima/foo.txt|]
-      , _newFile = [absfile|/home/dima/foo.txt|]
+      { _oldFile = [relfile|android/foo.txt|]
+      , _newFile = [relfile|android/foo.txt|]
       , _hunks =
           replicate 5 $
             DiffHunk
