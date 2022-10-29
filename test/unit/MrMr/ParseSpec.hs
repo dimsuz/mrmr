@@ -1,6 +1,6 @@
 module MrMr.ParseSpec (spec) where
 
-import Data.Text
+import Data.Text as T
 import Numeric.Natural
 import Parse
 import Test.Hspec
@@ -17,7 +17,7 @@ instance Arbitrary Header where
   arbitrary = do
     (Positive s1, Positive c1) <- arbitrary :: Gen (Positive Int, Positive Int)
     (Positive s2, Positive c2) <- arbitrary :: Gen (Positive Int, Positive Int)
-    rest <- arbitrary :: Gen Text
+    rest <- (arbitrary :: Gen Text) `suchThat` (T.all (/= '\n'))
     let old = if c1 == 1 then showt s1 else showt s1 <> "," <> showt c1
         new = if c2 == 1 then showt s2 else showt s2 <> "," <> showt c2
     pure

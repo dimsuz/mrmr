@@ -42,8 +42,9 @@ instance FromJSON DiffFile where
       hunks <- parseHunks <$> change .: "diff"
       pure $ DiffFile oldPath newPath hunks
 
+-- TODO Parse with Megaparsec for speed(?) ?
 parseHunks :: Text -> [DiffHunk]
-parseHunks = undefined
+parseHunks text = undefined
 
 newtype Iid = Iid Int
   deriving (Eq, Show)
@@ -56,7 +57,7 @@ data HunkHeader = HunkHeader
   , _oldCount :: Int
   , _newStart :: Int
   , _newCount :: Int
-  , _text :: Text
+  , _text :: Maybe Text
   }
   deriving (Show)
 
@@ -64,6 +65,7 @@ data DiffHunk = DiffHunk
   { _dhHeader :: HunkHeader
   , _dhLines :: [Text]
   }
+  deriving (Show)
 
 data DiffFile = DiffFile
   { _oldFile :: Path Rel File
