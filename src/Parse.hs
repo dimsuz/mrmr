@@ -14,14 +14,6 @@ import Types
 
 type Parser = Parsec Void Text
 
-hunkHeaderParser :: Parser HunkHeader
-hunkHeaderParser = do
-  os <- string "@@ -" *> L.decimal
-  oc <- fromMaybe 1 <$> optional (char ',' *> L.decimal)
-  ns <- string " +" *> L.decimal
-  nc <- (fromMaybe 1 <$> optional (char ',' *> L.decimal)) <* " @@ "
-  HunkHeader os oc ns nc <$> optional (takeWhile1P Nothing (\t -> t /= '\n'))
-
 decodeHunkHeader :: Text -> Either Text HunkHeader
 decodeHunkHeader text = case parse hunkHeaderParser "" text of
   Left bundle -> Left (pack (errorBundlePretty bundle))
@@ -42,13 +34,21 @@ encodeHunkHeader (HunkHeader os oc ns nc t) =
 decodeHunk :: Text -> Either Text DiffHunk
 decodeHunk text = case parse hunkParser "" text of
   Left bundle -> Left (pack (errorBundlePretty bundle))
-  Right header -> Right header
+  Right hunk -> Right hunk
 
 hunkParser :: Parser DiffHunk
 hunkParser = do
   header <- hunkHeaderParser <* newline
   lines <- many lineParser
   pure $ DiffHunk header lines
+
+hunkHeaderParser :: Parser HunkHeader
+hunkHeaderParser = do
+  os <- string "@@ -" *> L.decimal
+  oc <- fromMaybe 1 <$> optional (char ',' *> L.decimal)
+  ns <- string " +" *> L.decimal
+  nc <- (fromMaybe 1 <$> optional (char ',' *> L.decimal)) <* " @@ "
+  HunkHeader os oc ns nc <$> optional (takeWhile1P Nothing (\t -> t /= '\n'))
 
 lineParser :: Parser Text
 lineParser =
