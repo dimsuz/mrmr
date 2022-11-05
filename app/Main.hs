@@ -32,7 +32,10 @@ handleEvent
   -> AppEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent sess wenv node model evt = case evt of
-  AppInit -> [Event (MrShowDetails (Iid 33))] -- [Event FetchMrList]
+  AppInit ->
+    [ Event (MrShowDetails (Iid 33))
+    , Task $ fetchMrChanges sess (Iid 1129)
+    ] -- [Event FetchMrList]
   AppQuit -> [exitApplication]
   FetchMrList ->
     [ Model $
@@ -56,6 +59,12 @@ handleEvent sess wenv node model evt = case evt of
           & selectedMr ?~ iid
           & contentState .~ Ready -- TODO remove, used only without FetchMrList stage
     ]
+  MrDetailsFetched diffFiles ->
+    [ Model $
+        model
+          & selectedMrDiffs .~ diffFiles
+          & contentState .~ Ready -- TODO remove, used only without FetchMrList stage
+    ]
   ShowMrList ->
     [ Model $
         model
@@ -69,7 +78,7 @@ mockDiffFiles =
       , _hunks =
           replicate 5 $
             DiffHunk
-              { _dhHeader = HunkHeader{_oldStart = 23, _oldCount = 7, _newStart = 23, _newCount = 6, _text = "hello.world()"}
+              { _dhHeader = HunkHeader{_oldStart = 23, _oldCount = 7, _newStart = 23, _newCount = 6, _text = Just "hello.world()"}
               , _dhLines =
                   [ "         .collect { message ->"
                   , "-          if (message !is PushMessage.Unknown) {"
@@ -96,7 +105,7 @@ rootWidget wenv model =
     Loading text -> loadingOverlay text
     Ready ->
       if has _Just $ model ^. selectedMr
-        then mrChanges wenv mockDiffFiles
+        then mrChanges wenv (model ^. selectedMrDiffs)
         else mrListWidget wenv (model ^. mrs . _Just)
     Error text -> errorOverlay text
 
@@ -124,6 +133,7 @@ mainMrmr = do
       { _mrs = Nothing
       , _contentState = Loading "Loading MR list..."
       , _selectedMr = Nothing
+      , _selectedMrDiffs = []
       }
 
 main :: IO ()

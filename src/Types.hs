@@ -4,7 +4,6 @@ module Types where
 
 import Control.Lens
 import Data.Aeson
-import Data.Foldable (toList)
 import Data.Maybe
 import Data.Text (Text)
 import Monomer hiding (Path)
@@ -18,33 +17,7 @@ data MergeRequest = MergeRequest
   }
   deriving (Eq, Show)
 
-instance FromJSON MergeRequest where
-  parseJSON = withObject "MergeRequest" $ \mr ->
-    MergeRequest
-      <$> (Iid <$> mr .: "iid")
-      <*> mr
-        .: "title"
-
-instance FromJSON MrListResponse where
-  parseJSON = withArray "MrList" $ \arr -> do
-    mrs <- mapM parseJSON arr
-    pure $ MrListResponse (toList mrs)
-
 newtype MrChangesResponse = MrChangesResponse [DiffFile]
-
-instance FromJSON DiffFile where
-  parseJSON = withObject "change" $ \change ->
-    do
-      oldPathStr <- change .: "old_path"
-      oldPath <- maybe (fail "failed to parse old_path") pure (parseRelFile oldPathStr)
-      newPathStr <- change .: "new_path"
-      newPath <- maybe (fail "failed to parse new_path") pure (parseRelFile newPathStr)
-      hunks <- parseHunks <$> change .: "diff"
-      pure $ DiffFile oldPath newPath hunks
-
--- TODO Parse with Megaparsec for speed(?) ?
-parseHunks :: Text -> [DiffHunk]
-parseHunks text = undefined
 
 newtype Iid = Iid Int
   deriving (Eq, Show)
@@ -59,24 +32,26 @@ data HunkHeader = HunkHeader
   , _newCount :: Int
   , _text :: Maybe Text
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 data DiffHunk = DiffHunk
   { _dhHeader :: HunkHeader
   , _dhLines :: [Text]
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 data DiffFile = DiffFile
   { _oldFile :: Path Rel File
   , _newFile :: Path Rel File
   , _hunks :: [DiffHunk]
   }
+  deriving (Eq, Show)
 
 data AppModel = AppModel
   { _mrs :: Maybe [MergeRequest]
   , _contentState :: ContentLoadState
   , _selectedMr :: Maybe Iid
+  , _selectedMrDiffs :: [DiffFile]
   }
   deriving (Eq, Show)
 
@@ -85,6 +60,7 @@ data AppEvent
   | AppQuit
   | FetchMrList
   | MrListResult [MergeRequest]
+  | MrDetailsFetched [DiffFile]
   | MrListError Text
   | MrShowDetails Iid
   | ShowMrList

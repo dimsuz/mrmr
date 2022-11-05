@@ -1,6 +1,7 @@
 module Parse (
   decodeHunkHeader,
   encodeHunkHeader,
+  decodeFileDiff,
 ) where
 
 import Data.Maybe
@@ -25,8 +26,8 @@ encodeHunkHeader (HunkHeader os oc ns nc t) =
     <> old
     <> " +"
     <> new
-    <> " @@ "
-    <> fromMaybe "" t
+    <> " @@"
+    <> maybe "" (\v -> v) t
  where
   old = if oc == 1 then showt os else showt os <> "," <> showt oc
   new = if nc == 1 then showt ns else showt ns <> "," <> showt nc
@@ -35,6 +36,14 @@ decodeHunk :: Text -> Either Text DiffHunk
 decodeHunk text = case parse hunkParser "" text of
   Left bundle -> Left (pack (errorBundlePretty bundle))
   Right hunk -> Right hunk
+
+decodeFileDiff :: Text -> Either Text [DiffHunk]
+decodeFileDiff text = case parse fileDiffParser "" text of
+  Left bundle -> Left (pack (errorBundlePretty bundle))
+  Right result -> Right result
+
+fileDiffParser :: Parser [DiffHunk]
+fileDiffParser = some hunkParser
 
 hunkParser :: Parser DiffHunk
 hunkParser = do
@@ -47,7 +56,7 @@ hunkHeaderParser = do
   os <- string "@@ -" *> L.decimal
   oc <- fromMaybe 1 <$> optional (char ',' *> L.decimal)
   ns <- string " +" *> L.decimal
-  nc <- (fromMaybe 1 <$> optional (char ',' *> L.decimal)) <* " @@ "
+  nc <- (fromMaybe 1 <$> optional (char ',' *> L.decimal)) <* " @@"
   HunkHeader os oc ns nc <$> optional (takeWhile1P Nothing (\t -> t /= '\n'))
 
 lineParser :: Parser Text

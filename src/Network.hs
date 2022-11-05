@@ -4,15 +4,52 @@ module Network where
 
 import Control.Lens
 import Data.Aeson
+import Data.Foldable (toList)
 import Data.Text
 import Network.Wreq as W
 import Network.Wreq.Session as Sess
+import Parse (decodeFileDiff)
+import Path
 import TextShow
 import Types
 
 projectId = "0" -- 39695842" -- no-commit
 mrIid = "0" -- no-commit
 privateToken = "" -- no-commit
+
+instance FromJSON MergeRequest where
+  parseJSON = withObject "MergeRequest" $ \mr ->
+    MergeRequest
+      <$> (Iid <$> mr .: "iid")
+      <*> mr
+        .: "title"
+
+instance FromJSON MrListResponse where
+  parseJSON = withArray "MrList" $ \arr -> do
+    mrs <- mapM parseJSON arr
+    pure $ MrListResponse (toList mrs)
+
+instance FromJSON MrChangesResponse where
+  parseJSON = withObject "MrChanges" $ \obj -> do
+    changes <- obj .: "changes"
+    diffFiles <- mapM parseJSON changes
+    pure $ MrChangesResponse diffFiles
+
+instance FromJSON DiffFile where
+  parseJSON = withObject "change" $ \change ->
+    do
+      oldPathStr <- change .: "old_path"
+      oldPath <- maybe (fail "failed to parse old_path") pure (parseRelFile oldPathStr)
+      newPathStr <- change .: "new_path"
+      newPath <- maybe (fail "failed to parse new_path") pure (parseRelFile newPathStr)
+      hunksRaw <- change .: "diff"
+      hunks <- parseHunks hunksRaw
+      pure $ DiffFile oldPath newPath hunks
+
+parseHunks :: MonadFail m => Text -> m [DiffHunk]
+parseHunks text = case decodeFileDiff text of
+  Left error -> fail (unpack error)
+  Right hunks -> pure hunks
 
 mockMrs =
   [ MergeRequest{_iid = Iid 33, _title = "Merge Request #1"}
@@ -42,5 +79,6 @@ fetchMrChanges sess (Iid iid) = do
           <> showt iid
           <> "/changes?private_token="
           <> privateToken
-  resp <- Sess.get sess (unpack url) >>= W.asJSON
-  pure $ MrListResult (resp ^. responseBody)
+  resp <- (Sess.get sess (unpack url) >>= W.asJSON) :: IO (Response MrChangesResponse)
+  let MrChangesResponse diff = (resp ^. responseBody)
+  pure $ MrDetailsFetched diff -- (resp ^. responseBody)

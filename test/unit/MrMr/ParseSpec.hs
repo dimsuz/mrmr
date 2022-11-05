@@ -20,14 +20,15 @@ instance Arbitrary Header where
     rest <- (arbitrary :: Gen Text) `suchThat` (T.all (/= '\n'))
     let old = if c1 == 1 then showt s1 else showt s1 <> "," <> showt c1
         new = if c2 == 1 then showt s2 else showt s2 <> "," <> showt c2
+        rest' = if T.null rest then "" else " " <> rest
     pure
       ( Header $
           "@@ -"
             <> old
             <> " +"
             <> new
-            <> " @@ "
-            <> rest
+            <> " @@"
+            <> rest'
       )
 
 spec :: Spec
