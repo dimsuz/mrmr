@@ -81,4 +81,4 @@ fetchMrChanges sess (Iid iid) = do
           <> privateToken
   resp <- (Sess.get sess (unpack url) >>= W.asJSON) :: IO (Response MrChangesResponse)
   let MrChangesResponse diff = (resp ^. responseBody)
-  pure $ MrDetailsFetched diff -- (resp ^. responseBody)
+  pure $ MrDetailsFetched (Iid iid) diff

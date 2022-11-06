@@ -60,7 +60,7 @@ data AppEvent
   | AppQuit
   | FetchMrList
   | MrListResult [MergeRequest]
-  | MrDetailsFetched [DiffFile]
+  | MrDetailsFetched Iid [DiffFile]
   | MrListError Text
   | MrShowDetails Iid
   | ShowMrList

@@ -2,9 +2,10 @@ module UiKit where
 
 import Control.Lens
 import Data.Default
-import Data.Text (Text, isPrefixOf)
+import Data.Text (Text, isPrefixOf, pack)
 import Monomer as M
 import qualified Monomer.Lens as L
+import Path (toFilePath)
 import TextShow
 import Types
 
@@ -48,7 +49,7 @@ mrListRow wenv mr = row
   rowBgColor = wenv ^. L.theme . L.userColorMap . at "rowBgColor" . non def
   rowContent mr =
     hstack
-      [ label (mr ^. title) `styleBasic` [textSize 24]
+      [ label (mr ^. title) `styleBasic` [textSize 18]
       ]
   row = box_ cfg content
    where
@@ -75,12 +76,20 @@ diffLineColor line
   | "-" `isPrefixOf` line = diffRemoveLineColor
   | otherwise = white
 
+fileHeaderText :: DiffFile -> Text
+fileHeaderText file =
+  if old /= new
+    then pack $ (toFilePath old) <> " -> " <> (toFilePath new)
+    else pack (toFilePath old)
+ where
+  old = file ^. oldFile
+  new = file ^. newFile
+
 diffFile :: MrMrWenv -> DiffFile -> MrMrNode
 diffFile wenv file = layout
  where
   header =
-    hstack
-      [label "foo/bar.kt"]
+    label_ (fileHeaderText file) [multiline]
       `styleBasic` [minHeight 45, bgColor diffHeaderBgColor, borderB 1 borderColor, paddingH 16, paddingV 8]
   lineLabel text =
     box_ [alignRight] (label text)

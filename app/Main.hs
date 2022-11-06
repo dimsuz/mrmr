@@ -10,6 +10,7 @@ import Monomer
 import Network
 import Network.Wreq.Session as Sess
 import Path
+import TextShow
 import Types
 import UiKit
 
@@ -32,10 +33,10 @@ handleEvent
   -> AppEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent sess wenv node model evt = case evt of
-  AppInit ->
-    [ Event (MrShowDetails (Iid 33))
-    , Task $ fetchMrChanges sess (Iid 1129)
-    ] -- [Event FetchMrList]
+  AppInit -> [Event FetchMrList]
+  -- [ Event (MrShowDetails (Iid 33))
+  -- , Task $ fetchMrChanges sess (Iid 1129)
+  -- ] -- [Event FetchMrList]
   AppQuit -> [exitApplication]
   FetchMrList ->
     [ Model $
@@ -53,48 +54,23 @@ handleEvent sess wenv node model evt = case evt of
         model
           & contentState .~ Error err
     ]
-  MrShowDetails iid ->
+  MrShowDetails (Iid iid) ->
     [ Model $
-        model
-          & selectedMr ?~ iid
-          & contentState .~ Ready -- TODO remove, used only without FetchMrList stage
+        model & contentState .~ Loading ("Loading MR #" <> showt iid <> "...")
+    , Task $ fetchMrChanges sess (Iid iid)
     ]
-  MrDetailsFetched diffFiles ->
+  MrDetailsFetched iid diffFiles ->
     [ Model $
         model
+          & selectedMr .~ Just iid
           & selectedMrDiffs .~ diffFiles
-          & contentState .~ Ready -- TODO remove, used only without FetchMrList stage
+          & contentState .~ Ready
     ]
   ShowMrList ->
     [ Model $
         model
           & selectedMr .~ Nothing
     ]
-
-mockDiffFiles =
-  [ DiffFile
-      { _oldFile = [relfile|android/foo.txt|]
-      , _newFile = [relfile|android/foo.txt|]
-      , _hunks =
-          replicate 5 $
-            DiffHunk
-              { _dhHeader = HunkHeader{_oldStart = 23, _oldCount = 7, _newStart = 23, _newCount = 6, _text = Just "hello.world()"}
-              , _dhLines =
-                  [ "         .collect { message ->"
-                  , "-          if (message !is PushMessage.Unknown) {"
-                  , "-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager"
-                  , "-            message.toAndroidNotification(applicationContext)?.let { notificationManager.notify(message.id, it) }"
-                  , "-          } else {"
-                  , "-            Timber.d(\"Received unknown type of message $message\")"
-                  , "-          }"
-                  , "+          val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager"
-                  , "+          message.toAndroidNotification(applicationContext)?.let { notificationManager.notify(message.id, it) }"
-                  , "         }"
-                  , "     }"
-                  ]
-              }
-      }
-  ]
 
 rootWidget
   :: MrMrWenv
