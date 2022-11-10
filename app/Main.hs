@@ -16,6 +16,8 @@ import UiKit
 
 import qualified Monomer.Lens as L
 
+testMrIid = Nothing
+
 buildUI
   :: WidgetEnv AppModel AppEvent
   -> AppModel
@@ -33,10 +35,9 @@ handleEvent
   -> AppEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent sess wenv node model evt = case evt of
-  AppInit -> [Event FetchMrList]
-  -- [ Event (MrShowDetails (Iid 33))
-  -- , Task $ fetchMrChanges sess (Iid 1129)
-  -- ] -- [Event FetchMrList]
+  AppInit -> case testMrIid of
+    Just iid -> [Event (MrShowDetails (Iid 1129)), Task $ fetchMrChanges sess (Iid 1129)]
+    Nothing -> [Event FetchMrList]
   AppQuit -> [exitApplication]
   FetchMrList ->
     [ Model $

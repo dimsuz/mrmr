@@ -85,6 +85,16 @@ fileHeaderText file =
   old = file ^. oldFile
   new = file ^. newFile
 
+hunkLineNumbers :: DiffHunk -> [(Text, Text)]
+hunkLineNumbers hunk = map (\i -> ("10", "20")) (hunk ^. dhLines)
+
+oldLineAt :: HunkHeader -> Text -> Int -> Int
+oldLineAt header line index = start + count
+ where
+  isOld = ("-" `isPrefixOf` line) || (" " `isPrefixOf` line)
+  start = header ^. oldStart
+  count = header ^. oldCount
+
 diffFile :: MrMrWenv -> DiffFile -> MrMrNode
 diffFile wenv file = layout
  where
@@ -95,8 +105,8 @@ diffFile wenv file = layout
     box_ [alignRight] (label text)
       `styleBasic` [paddingV 6, paddingH 8, borderR 1 borderColor, bgColor hunkLineBgColor]
       `styleHover` [bgColor hunkLineBgColorHover, cursorIcon CursorHand]
-  lineNumbersRow index header =
-    hgrid [lineLabel (showt $ index * 88), lineLabel (showt $ index * 4)]
+  lineNumbersRow old new =
+    hgrid [lineLabel old, lineLabel new]
   -- TODO use computeTextSize + padding to calculate height instead of hardcoding minHeight
   hunkLineHeader = spacer `styleBasic` [minHeight 28, bgColor hunkLineHeaderBgColor]
   hunkHeader = spacer `styleBasic` [minHeight 28, bgColor hunkHeaderBgColor]
@@ -104,8 +114,8 @@ diffFile wenv file = layout
     vstack $
       hunkLineHeader
         : map
-          (\i -> lineNumbersRow i (hunk ^. dhHeader))
-          [1 .. length (hunk ^. dhLines)]
+          (\(old, new) -> lineNumbersRow old new)
+          (hunkLineNumbers hunk)
   diffLine line =
     label line
       `styleBasic` [paddingV 6, bgColor (diffLineColor line)]
