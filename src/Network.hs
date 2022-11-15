@@ -3,6 +3,7 @@
 module Network where
 
 import Control.Lens
+import Control.Monad (mzero, unless)
 import Data.Aeson
 import Data.Foldable (toList)
 import Data.Text
@@ -34,6 +35,19 @@ instance FromJSON MrChangesResponse where
     changes <- obj .: "changes"
     diffFiles <- mapM parseJSON changes
     pure $ MrChangesResponse diffFiles
+
+instance FromJSON MrCommentsResponse where
+  parseJSON = withArray "MrComments" $ \arr -> do
+    comments <- mapM parseJSON arr
+    pure $ MrCommentsResponse (toList comments)
+
+instance FromJSON Comment where
+  parseJSON = withObject "Comment" $ \c -> do
+    isSystem <- c .: "system"
+    if isSystem
+      then mzero
+      else do
+        pure $ Comment Nothing Nothing 0 0 "foo" "bar"
 
 instance FromJSON DiffFile where
   parseJSON = withObject "change" $ \change ->
@@ -82,3 +96,20 @@ fetchMrChanges sess (Iid iid) = do
   resp <- (Sess.get sess (unpack url) >>= W.asJSON) :: IO (Response MrChangesResponse)
   let MrChangesResponse diff = (resp ^. responseBody)
   pure $ MrDetailsFetched (Iid iid) diff
+
+fetchMrComments
+  :: Sess.Session
+  -> Iid
+  -> IO AppEvent
+fetchMrComments sess (Iid iid) = do
+  let url =
+        "https://gitlab.com/api/v4/projects/"
+          <> projectId
+          <> "/merge_requests/"
+          <> showt iid
+          -- TODO add proper pagination instead of maxing out at 100 comments
+          <> "/notes?per_page=100&private_token="
+          <> privateToken
+  resp <- (Sess.get sess (unpack url) >>= W.asJSON) :: IO (Response MrCommentsResponse)
+  let MrCommentsResponse comments = (resp ^. responseBody)
+  pure $ MrCommentsFetched (Iid iid) comments

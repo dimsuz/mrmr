@@ -19,6 +19,8 @@ data MergeRequest = MergeRequest
 
 newtype MrChangesResponse = MrChangesResponse [DiffFile]
 
+newtype MrCommentsResponse = MrCommentsResponse [Comment]
+
 newtype Iid = Iid Int
   deriving (Eq, Show)
 
@@ -47,6 +49,16 @@ data DiffFile = DiffFile
   }
   deriving (Eq, Show)
 
+data Comment = Comment
+  { _cmtOldFile :: Maybe (Path Rel File)
+  , _cmtNewFile :: Maybe (Path Rel File)
+  , _cmtOldLine :: Int
+  , _cmtNewLine :: Int
+  , _cmtText :: Text
+  , _cmtAuthorName :: Text
+  }
+  deriving (Eq, Show)
+
 data AppModel = AppModel
   { _mrs :: Maybe [MergeRequest]
   , _contentState :: ContentLoadState
@@ -61,6 +73,7 @@ data AppEvent
   | FetchMrList
   | MrListResult [MergeRequest]
   | MrDetailsFetched Iid [DiffFile]
+  | MrCommentsFetched Iid [Comment]
   | MrListError Text
   | MrShowDetails Iid
   | ShowMrList
