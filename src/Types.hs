@@ -21,6 +21,12 @@ newtype MrChangesResponse = MrChangesResponse [DiffFile]
 
 newtype MrCommentsResponse = MrCommentsResponse [Comment]
 
+data MrDetails = MrDetails
+  { _diffs :: [DiffFile]
+  , _comments :: [Comment]
+  }
+  deriving (Eq, Show)
+
 newtype Iid = Iid Int
   deriving (Eq, Show)
 
@@ -72,8 +78,7 @@ data AppEvent
   | AppQuit
   | FetchMrList
   | MrListResult [MergeRequest]
-  | MrDetailsFetched Iid [DiffFile]
-  | MrCommentsFetched Iid [Comment]
+  | MrDetailsFetched Iid MrDetails
   | MrListError Text
   | MrShowDetails Iid
   | ShowMrList
@@ -87,3 +92,4 @@ makeLenses 'DiffFile
 makeLenses 'AppModel
 makeLenses 'DiffHunk
 makeLenses 'HunkHeader
+makeLenses 'MrDetails

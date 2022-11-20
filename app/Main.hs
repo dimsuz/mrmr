@@ -36,7 +36,7 @@ handleEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent sess wenv node model evt = case evt of
   AppInit -> case testMrIid of
-    Just iid -> [Event (MrShowDetails (Iid 1129)), Task $ fetchMrChanges sess (Iid 1129)]
+    Just iid -> [Event (MrShowDetails iid)]
     Nothing -> [Event FetchMrList]
   AppQuit -> [exitApplication]
   FetchMrList ->
@@ -58,13 +58,13 @@ handleEvent sess wenv node model evt = case evt of
   MrShowDetails (Iid iid) ->
     [ Model $
         model & contentState .~ Loading ("Loading MR #" <> showt iid <> "...")
-    , Task $ fetchMrChanges sess (Iid iid)
+    , Task $ fetchMrDetails sess (Iid iid)
     ]
-  MrDetailsFetched iid diffFiles ->
+  MrDetailsFetched iid details ->
     [ Model $
         model
           & selectedMr .~ Just iid
-          & selectedMrDiffs .~ diffFiles
+          & selectedMrDiffs .~ (details ^. diffs)
           & contentState .~ Ready
     ]
   ShowMrList ->

@@ -2,10 +2,13 @@
 
 module Network where
 
+import Control.Applicative (optional)
 import Control.Lens
 import Control.Monad (mzero, unless)
 import Data.Aeson
+import Data.Aeson.Types (parseMaybe)
 import Data.Foldable (toList)
+import Data.Maybe (catMaybes)
 import Data.Text
 import Network.Wreq as W
 import Network.Wreq.Session as Sess
@@ -38,8 +41,8 @@ instance FromJSON MrChangesResponse where
 
 instance FromJSON MrCommentsResponse where
   parseJSON = withArray "MrComments" $ \arr -> do
-    comments <- mapM parseJSON arr
-    pure $ MrCommentsResponse (toList comments)
+    comments <- mapM (\v -> optional (parseJSON v)) arr
+    pure $ MrCommentsResponse (catMaybes (toList comments))
 
 instance FromJSON Comment where
   parseJSON = withObject "Comment" $ \c -> do
@@ -65,14 +68,6 @@ parseHunks text = case decodeFileDiff text of
   Left error -> fail (unpack error)
   Right hunks -> pure hunks
 
-mockMrs =
-  [ MergeRequest{_iid = Iid 33, _title = "Merge Request #1"}
-  , MergeRequest{_iid = Iid 34, _title = "Merge Request #2"}
-  , MergeRequest{_iid = Iid 35, _title = "Merge Request #3"}
-  , MergeRequest{_iid = Iid 36, _title = "Merge Request #4"}
-  , MergeRequest{_iid = Iid 37, _title = "Merge Request #5"}
-  ]
-
 fetchMrList
   :: Sess.Session
   -> IO AppEvent
@@ -81,10 +76,19 @@ fetchMrList sess = do
   resp <- Sess.get sess (unpack url) >>= W.asJSON
   pure $ MrListResult (resp ^. responseBody)
 
-fetchMrChanges
+fetchMrDetails
   :: Sess.Session
   -> Iid
   -> IO AppEvent
+fetchMrDetails sess iid = do
+  MrChangesResponse diffs <- fetchMrChanges sess iid
+  MrCommentsResponse comments <- fetchMrComments sess iid
+  pure $ MrDetailsFetched iid (MrDetails diffs comments)
+
+fetchMrChanges
+  :: Sess.Session
+  -> Iid
+  -> IO MrChangesResponse
 fetchMrChanges sess (Iid iid) = do
   let url =
         "https://gitlab.com/api/v4/projects/"
@@ -94,13 +98,12 @@ fetchMrChanges sess (Iid iid) = do
           <> "/changes?private_token="
           <> privateToken
   resp <- (Sess.get sess (unpack url) >>= W.asJSON) :: IO (Response MrChangesResponse)
-  let MrChangesResponse diff = (resp ^. responseBody)
-  pure $ MrDetailsFetched (Iid iid) diff
+  pure (resp ^. responseBody)
 
 fetchMrComments
   :: Sess.Session
   -> Iid
-  -> IO AppEvent
+  -> IO MrCommentsResponse
 fetchMrComments sess (Iid iid) = do
   let url =
         "https://gitlab.com/api/v4/projects/"
@@ -111,5 +114,4 @@ fetchMrComments sess (Iid iid) = do
           <> "/notes?per_page=100&private_token="
           <> privateToken
   resp <- (Sess.get sess (unpack url) >>= W.asJSON) :: IO (Response MrCommentsResponse)
-  let MrCommentsResponse comments = (resp ^. responseBody)
-  pure $ MrCommentsFetched (Iid iid) comments
+  pure (resp ^. responseBody)
