@@ -56,10 +56,10 @@ data DiffFile = DiffFile
   deriving (Eq, Show)
 
 data Comment = Comment
-  { _cmtOldFile :: Maybe (Path Rel File)
-  , _cmtNewFile :: Maybe (Path Rel File)
-  , _cmtOldLine :: Int
-  , _cmtNewLine :: Int
+  { _cmtOldFile :: Path Rel File
+  , _cmtNewFile :: Path Rel File
+  , _cmtOldLine :: Maybe Int
+  , _cmtNewLine :: Maybe Int
   , _cmtText :: Text
   , _cmtAuthorName :: Text
   }

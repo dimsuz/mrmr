@@ -6,7 +6,6 @@ import Control.Applicative (optional)
 import Control.Lens
 import Control.Monad (mzero, unless)
 import Data.Aeson
-import Data.Aeson.Types (parseMaybe)
 import Data.Foldable (toList)
 import Data.Maybe (catMaybes)
 import Data.Text
@@ -50,7 +49,25 @@ instance FromJSON Comment where
     if isSystem
       then mzero
       else do
-        pure $ Comment Nothing Nothing 0 0 "foo" "bar"
+        position <- c .: "position"
+        oldLine <- position .:? "old_line"
+        newLine <- position .:? "new_line"
+        oldPathStr <- position .: "old_path"
+        oldPath <- maybe (fail "failed to parse old_path") pure (parseRelFile oldPathStr)
+        newPathStr <- position .: "new_path"
+        newPath <- maybe (fail "failed to parse new_path") pure (parseRelFile newPathStr)
+        text <- c .: "body"
+        author <- c .: "author"
+        name <- author .: "name"
+        pure $
+          Comment
+            { _cmtOldFile = oldPath
+            , _cmtNewFile = newPath
+            , _cmtOldLine = oldLine
+            , _cmtNewLine = newLine
+            , _cmtText = text
+            , _cmtAuthorName = name
+            }
 
 instance FromJSON DiffFile where
   parseJSON = withObject "change" $ \change ->
