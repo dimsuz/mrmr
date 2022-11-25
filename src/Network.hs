@@ -99,8 +99,8 @@ fetchMrDetails
   -> IO AppEvent
 fetchMrDetails sess iid = do
   MrChangesResponse diffs <- fetchMrChanges sess iid
-  MrCommentsResponse comments <- fetchMrComments sess iid
-  pure $ MrDetailsFetched iid (MrDetails diffs comments)
+  -- MrCommentsResponse comments <- fetchMrComments sess iid
+  pure $ MrDetailsFetched iid (MrDetails diffs [])
 
 fetchMrChanges
   :: Sess.Session

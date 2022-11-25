@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Main where
 
@@ -81,7 +82,42 @@ playgroundWidget
   :: MrMrWenv
   -> AppModel
   -> MrMrNode
-playgroundWidget wenv _ = label "Hello"
+playgroundWidget wenv _ = commentThread wenv mockComments
+ where
+  mockComments =
+    [ Comment
+        { _cmtOldFile = [relfile|file/a.txt|]
+        , _cmtNewFile = [relfile|file/b.txt|]
+        , _cmtOldLine = Nothing
+        , _cmtNewLine = Nothing
+        , _cmtText = "ничего от такой смены не поломается?"
+        , _cmtAuthorName = "Valery Kolesnikov"
+        }
+    , Comment
+        { _cmtOldFile = [relfile|file/a.txt|]
+        , _cmtNewFile = [relfile|file/b.txt|]
+        , _cmtOldLine = Nothing
+        , _cmtNewLine = Nothing
+        , _cmtText = "нет, там наоборот баг всплыл при открытии диплинка, всегда запускались букмарки"
+        , _cmtAuthorName = "Roman Chetverikov"
+        }
+    , Comment
+        { _cmtOldFile = [relfile|file/a.txt|]
+        , _cmtNewFile = [relfile|file/b.txt|]
+        , _cmtOldLine = Nothing
+        , _cmtNewLine = Nothing
+        , _cmtText = "так по идее ведь мы хотим как раз сначала обработать все специфические, а потом уже общие uri.\n\nМне кажется, это может всё же что-то ещё поломать.\n\nНадо чётко понять какое поведение нам надо и какой приоритет должен быть."
+        , _cmtAuthorName = "Dmitry Suzdalev"
+        }
+    , Comment
+        { _cmtOldFile = [relfile|file/a.txt|]
+        , _cmtNewFile = [relfile|file/b.txt|]
+        , _cmtOldLine = Nothing
+        , _cmtNewLine = Nothing
+        , _cmtText = "extractUriDeepLink() в любом случае пройдет мимо, там указаны конкретные значения диплинков. А поменял я потому, что в некоторых случаях (и в этом) ошибочно отрабатывает return if (!files.isNullOrEmpty()) DeepLink.ImportFavorites.Bookmarks(files) else null"
+        , _cmtAuthorName = "Roman Chetverikov"
+        }
+    ]
 
 rootWidget
   :: MrMrWenv

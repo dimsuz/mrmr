@@ -114,7 +114,7 @@ diffFile wenv file = layout
     vstack $
       hunkLineHeader
         : map
-          (\(old, new) -> lineNumbersRow old new)
+          (uncurry lineNumbersRow)
           (hunkLineNumbers hunk)
   diffLine line =
     label line
@@ -123,7 +123,7 @@ diffFile wenv file = layout
   diffLines hunk =
     vstack_
       [sizeReqUpdater (fixedToExpandW 1.0)]
-      (hunkHeader : (map diffLine (hunk ^. dhLines)))
+      (hunkHeader : map diffLine (hunk ^. dhLines))
   diffHunk hunk =
     hstack [lineNumbers hunk, diffLines hunk]
   diff = vstack (map diffHunk (file ^. hunks)) `styleBasic` [bgColor white]
@@ -132,3 +132,10 @@ diffFile wenv file = layout
       [sizeReqUpdater clearExtra]
       [header, diff]
       `styleBasic` [border 1 borderColor, radius 5]
+
+commentThread :: MrMrWenv -> [Comment] -> MrMrNode
+commentThread wenv comments = vstack [thread, replyInput]
+ where
+  thread = vstack (map comment comments)
+  comment _ = label "Comment"
+  replyInput = label "ReplyInput"
