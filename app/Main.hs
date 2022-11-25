@@ -17,6 +17,7 @@ import UiKit
 import qualified Monomer.Lens as L
 
 testMrIid = Nothing
+usePlayground = True
 
 buildUI
   :: WidgetEnv AppModel AppEvent
@@ -25,7 +26,8 @@ buildUI
 buildUI wenv model = widgetTree
  where
   bindings = [("Esc", AppQuit)]
-  widgetTree = keystroke bindings $ rootWidget wenv model `nodeFocusable` True
+  root = if usePlayground then playgroundWidget wenv model else rootWidget wenv model `nodeFocusable` True
+  widgetTree = keystroke bindings $ root
 
 handleEvent
   :: Sess.Session
@@ -35,9 +37,12 @@ handleEvent
   -> AppEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent sess wenv node model evt = case evt of
-  AppInit -> case testMrIid of
-    Just iid -> [Event (MrShowDetails iid)]
-    Nothing -> [Event FetchMrList]
+  AppInit ->
+    if usePlayground
+      then []
+      else case testMrIid of
+        Just iid -> [Event (MrShowDetails iid)]
+        Nothing -> [Event FetchMrList]
   AppQuit -> [exitApplication]
   FetchMrList ->
     [ Model $
@@ -72,6 +77,12 @@ handleEvent sess wenv node model evt = case evt of
         model
           & selectedMr .~ Nothing
     ]
+
+playgroundWidget
+  :: MrMrWenv
+  -> AppModel
+  -> MrMrNode
+playgroundWidget wenv _ = label "Hello"
 
 rootWidget
   :: MrMrWenv
