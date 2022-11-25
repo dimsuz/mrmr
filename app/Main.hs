@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Main where
 
@@ -68,7 +67,7 @@ handleEvent sess wenv node model evt = case evt of
   MrDetailsFetched iid details ->
     [ Model $
         model
-          & selectedMr .~ Just iid
+          & selectedMr ?~ iid
           & selectedMrDiffs .~ (details ^. diffs)
           & contentState .~ Ready
     ]
