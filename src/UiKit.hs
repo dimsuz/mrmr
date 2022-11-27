@@ -4,6 +4,7 @@ import Control.Lens
 import Data.Default
 import Data.Text (Text, isPrefixOf, pack)
 import Monomer as M
+import Monomer.Graphics.RemixIcon
 import qualified Monomer.Lens as L
 import Path (toFilePath)
 import TextShow
@@ -133,9 +134,24 @@ diffFile wenv file = layout
       [header, diff]
       `styleBasic` [border 1 borderColor, radius 5]
 
+comment :: Comment -> MrMrNode
+comment item = vstack [header, body]
+ where
+  header = hstack [author, filler, actions] `styleBasic` []
+  author =
+    hstack
+      [ label (item ^. cmtAuthorName) `styleBasic` [textFont "Bold", paddingL 24]
+      ]
+  actions =
+    hstack
+      [ button remixPencilFill EditComment
+          `styleBasic` [textFont "Remix", textSize 24, textMiddle, padding 4]
+      ]
+      `styleBasic` [padding 8]
+  body = label "Body"
+
 commentThread :: MrMrWenv -> [Comment] -> MrMrNode
-commentThread wenv comments = vstack [thread, replyInput]
+commentThread wenv comments = vstack [thread, replyInput] `styleBasic` [border 1 borderColor]
  where
   thread = vstack (map comment comments)
-  comment _ = label "Comment"
   replyInput = label "ReplyInput"

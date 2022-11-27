@@ -82,6 +82,7 @@ data AppEvent
   | MrListError Text
   | MrShowDetails Iid
   | ShowMrList
+  | EditComment
   deriving (Eq, Show)
 
 type MrMrWenv = WidgetEnv AppModel AppEvent
@@ -93,3 +94,4 @@ makeLenses 'AppModel
 makeLenses 'DiffHunk
 makeLenses 'HunkHeader
 makeLenses 'MrDetails
+makeLenses 'Comment

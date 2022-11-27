@@ -77,12 +77,13 @@ handleEvent sess wenv node model evt = case evt of
         model
           & selectedMr .~ Nothing
     ]
+  EditComment -> []
 
 playgroundWidget
   :: MrMrWenv
   -> AppModel
   -> MrMrNode
-playgroundWidget wenv _ = commentThread wenv mockComments
+playgroundWidget wenv _ = vstack_ [sizeReqUpdater (fixedToExpandW 1.0)] [commentThread wenv mockComments] `styleBasic` [padding 24, bgColor white]
  where
   mockComments =
     [ Comment
@@ -149,6 +150,8 @@ mainMrmr = do
     , appWindowState (MainWindowNormal (1200, 800))
     , appTheme lightTheme
     , appFontDef "Regular" "./assets/fonts/JetBrainsMono-Regular.ttf"
+    , appFontDef "Bold" "./assets/fonts/JetBrainsMono-Bold.ttf"
+    , appFontDef "Remix" "./assets/fonts/remixicon.ttf"
     , appInitEvent AppInit
     ]
   model =
