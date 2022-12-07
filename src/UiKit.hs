@@ -18,6 +18,7 @@ hunkHeaderBgColor = rgb 240 240 240
 hunkLineHeaderBgColor = rgb 219 219 219
 diffRemoveLineColor = rgb 251 233 235
 diffAddLineColor = rgb 236 253 240
+replyAreaBg = rgb 251 250 253
 
 titleText :: (M.WidgetModel s, M.WidgetEvent e) => Text -> M.WidgetNode s e
 titleText text = M.label text `styleBasic` [textSize 24]
@@ -148,10 +149,20 @@ comment item = vstack [header, body]
           `styleBasic` [textFont "Remix", textSize 24, textMiddle, padding 4]
       ]
       `styleBasic` [padding 8]
-  body = label "Body"
+  body =
+    label_ (item ^. cmtText) [multiline] `styleBasic` [paddingL 24, textSpaceV 8]
 
 commentThread :: MrMrWenv -> [Comment] -> MrMrNode
-commentThread wenv comments = vstack [thread, replyInput] `styleBasic` [border 1 borderColor]
+commentThread wenv comments = vstack [thread, spacer, replyInput] `styleBasic` [border 1 borderColor]
  where
-  thread = vstack (map comment comments)
-  replyInput = label "ReplyInput"
+  thread = vstack_ [childSpacing_ 16] (map comment comments)
+  replyInput =
+    hstack_
+      [childSpacing_ 16]
+      [ box_
+          [expandContent, sizeReqUpdater (fixedToExpandW 1.0)]
+          (label "Reply")
+          `styleBasic` [padding 8, border 1 borderColor, bgColor white, cursorIBeam]
+      , button "Unresolve thread" EditComment
+      ]
+      `styleBasic` [padding 16, bgColor replyAreaBg]
