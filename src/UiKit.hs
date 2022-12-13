@@ -2,6 +2,7 @@ module UiKit where
 
 import Control.Lens
 import Data.Default
+import Data.Maybe (isJust)
 import Data.Text (Text, isPrefixOf, pack)
 import Monomer as M
 import Monomer.Graphics.RemixIcon
@@ -152,17 +153,25 @@ comment item = vstack [header, body]
   body =
     label_ (item ^. cmtText) [multiline] `styleBasic` [paddingL 24, textSpaceV 8]
 
-commentThread :: MrMrWenv -> [Comment] -> MrMrNode
-commentThread wenv comments = vstack [thread, spacer, replyInput] `styleBasic` [border 1 borderColor]
+commentThread :: MrMrWenv -> [Comment] -> AppModel -> MrMrNode
+commentThread wenv comments model = vstack [thread, spacer, replyInput] `styleBasic` [border 1 borderColor]
  where
   thread = vstack_ [childSpacing_ 16] (map comment comments)
-  replyInput =
+  activeReplyInput =
+    vstack_
+      [childSpacing_ 16]
+      [ textArea (activeComment . non "") `nodeKey` "commentInput"
+      , box_ [alignLeft] (button "Reply" EditComment)
+      ]
+  inactiveReplyInput =
     hstack_
       [childSpacing_ 16]
       [ box_
-          [expandContent, sizeReqUpdater (fixedToExpandW 1.0)]
-          (label "Reply")
-          `styleBasic` [padding 8, border 1 borderColor, bgColor white, cursorIBeam]
+          [expandContent, sizeReqUpdater (fixedToExpandW 1.0), onClick AddReply]
+          (label "Reply" `styleBasic` [padding 8, border 1 borderColor, bgColor white, cursorIBeam])
       , button "Unresolve thread" EditComment
       ]
-      `styleBasic` [padding 16, bgColor replyAreaBg]
+  replyInput =
+    if isJust (model ^. activeComment)
+      then activeReplyInput `styleBasic` [padding 16, bgColor replyAreaBg]
+      else inactiveReplyInput `styleBasic` [padding 16, bgColor replyAreaBg]

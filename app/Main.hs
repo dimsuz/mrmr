@@ -78,12 +78,17 @@ handleEvent sess wenv node model evt = case evt of
           & selectedMr .~ Nothing
     ]
   EditComment -> []
+  AddReply ->
+    [ Model $
+        model & activeComment ?~ ""
+    , SetFocusOnKey "commentInput"
+    ]
 
 playgroundWidget
   :: MrMrWenv
   -> AppModel
   -> MrMrNode
-playgroundWidget wenv _ = vstack_ [sizeReqUpdater (fixedToExpandW 1.0)] [commentThread wenv mockComments] `styleBasic` [padding 24, bgColor white]
+playgroundWidget wenv model = vstack_ [sizeReqUpdater (fixedToExpandW 1.0)] [commentThread wenv mockComments model] `styleBasic` [padding 24, bgColor white]
  where
   mockComments =
     [ Comment
@@ -160,6 +165,7 @@ mainMrmr = do
       , _contentState = Loading "Loading MR list..."
       , _selectedMr = Nothing
       , _selectedMrDiffs = []
+      , _activeComment = Nothing
       }
 
 main :: IO ()

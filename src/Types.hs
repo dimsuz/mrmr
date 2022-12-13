@@ -70,6 +70,7 @@ data AppModel = AppModel
   , _contentState :: ContentLoadState
   , _selectedMr :: Maybe Iid
   , _selectedMrDiffs :: [DiffFile]
+  , _activeComment :: Maybe Text
   }
   deriving (Eq, Show)
 
@@ -83,6 +84,7 @@ data AppEvent
   | MrShowDetails Iid
   | ShowMrList
   | EditComment
+  | AddReply
   deriving (Eq, Show)
 
 type MrMrWenv = WidgetEnv AppModel AppEvent
